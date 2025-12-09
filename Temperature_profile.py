@@ -7,11 +7,11 @@ import os
 # Burner/Domain
 A_burner = 0.00113       # m^2
 max_distance = 0.011     # m
-p_lab = 101325          # Pa
+p_lab = 101325           # Pa
 width = 0.015            # m
 
 # Conditions
-T_burner_plate = 50.0 + 273.15  # 323.15 K
+T_burner_plate = 146 + 273.15
 T_in = T_burner_plate
 phi = 1.0
 fuel_name = 'CH4'
@@ -126,25 +126,36 @@ def run_flame_simulation(mech_file):
 # --- 3. MAIN LOOP ---
 plt.figure(figsize=(10, 6))
 
-for mech in mechanisms_to_test:
+# Define a list of styles to cycle through: 
+# '-' = solid, '--' = dashed, '-.' = dash-dot, ':' = dotted
+styles = ['-', '--', '-.', ':']
+
+for i, mech in enumerate(mechanisms_to_test):
     z, T = run_flame_simulation(mech)
     
     if z is not None:
         # Store for plotting
         comparison_results[mech] = (z, T)
         
-        # Add to plot
-        plt.plot(z, T, label=f'{mech} (T_max={max(T):.0f} K)')
+        # Assign style based on the index (uses modulo % to recycle styles if you have many mechanisms)
+        current_style = styles[i % len(styles)]
+        
+        # Add to plot with the specific linestyle and slightly thicker line for visibility
+        plt.plot(z, T, 
+                 linestyle=current_style, 
+                 linewidth=2, 
+                 label=f'{mech} (T_max={max(T):.0f} K)')
 
 # --- 4. FINALIZE PLOT ---
-plt.axvline(x=max_distance * 1000, color='gray', linestyle='--', alpha=0.7, label='11 mm Limit')
+# [Keep the rest of your formatting code the same]
+plt.axvline(x=max_distance * 1000, color='gray', linestyle='--', alpha=0.5, label='11 mm Limit')
 plt.axhline(y=T_burner_plate, color='black', linestyle=':', label='Burner Surface')
 
-plt.xlim(0, 15) # Show slightly past 11mm to see trend
+plt.xlim(0, 15) 
 plt.xlabel('Distance from Burner (mm)')
 plt.ylabel('Temperature (K)')
 plt.title(f'Mechanism Comparison (Q={V_fuel_norm_Lpm} L/min, $\phi={phi}$)')
-plt.grid(True, which='both', linestyle='--', alpha=0.7)
+plt.grid(True, which='both', linestyle='--', alpha=0.5)
 plt.legend()
 plt.tight_layout()
 
